@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rachel Seller Dashboard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f5f6fa;
+      color: #222;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 20px;
+    }
+
+    header h1 {
+      font-size: 24px;
+    }
+
+    header p {
+      margin-top: 5px;
+      opacity: 0.8;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .card strong {
+      font-size: 25px;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .section h2 {
+      margin-bottom: 15px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 15px;
+    }
+
+    button {
+      background: #111827;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .product {
+      border: 1px solid #eee;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .profit {
+      color: green;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      .cards {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Rachel Seller Dashboard</h1>
+  <p>Manage your products, sales and profit</p>
+</header>
+
+<div class="container">
+
+  <div class="cards">
+    <div class="card">
+      <h3>Total Products</h3>
+      <strong id="productCount">0</strong>
+    </div>
+
+    <div class="card">
+      <h3>Total Sales</h3>
+      <strong>GH₵ <span id="sales">0.00</span></strong>
+    </div>
+
+    <div class="card">
+      <h3>Total Profit</h3>
+      <strong class="profit">GH₵ <span id="profit">0.00</span></strong>
+    </div>
+
+    <div class="card">
+      <h3>Orders</h3>
+      <strong id="orders">0</strong>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Add Product</h2>
+
+    <input id="productName" type="text" placeholder="Product name">
+
+    <input id="costPrice" type="number" placeholder="Supplier price (GH₵)">
+
+    <input id="sellPrice" type="number" placeholder="Selling price (GH₵)">
+
+    <button onclick="addProduct()">Add Product</button>
+  </div>
+
+  <div class="section">
+    <h2>My Products</h2>
+    <div id="productList">
+      <p>No products added yet.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+let products = JSON.parse(localStorage.getItem("rachelProducts")) || [];
+
+function saveProducts() {
+  localStorage.setItem("rachelProducts", JSON.stringify(products));
+}
+
+function addProduct() {
+
+  const name = document.getElementById("productName").value;
+  const cost = Number(document.getElementById("costPrice").value);
+  const sell = Number(document.getElementById("sellPrice").value);
+
+  if (!name || !cost || !sell) {
+    alert("Please enter all product details.");
+    return;
+  }
+
+  const product = {
+    name: name,
+    cost: cost,
+    sell: sell,
+    profit: sell - cost
+  };
+
+  products.push(product);
+
+  saveProducts();
+
+  document.getElementById("productName").value = "";
+  document.getElementById("costPrice").value = "";
+  document.getElementById("sellPrice").value = "";
+
+  displayProducts();
+}
+
+function displayProducts() {
+
+  const list = document.getElementById("productList");
+
+  if (products.length === 0) {
+    list.innerHTML = "<p>No products added yet.</p>";
+    return;
+  }
+
+  list.innerHTML = "";
+
+  products.forEach((product, index) => {
+
+    list.innerHTML += `
+      <div class="product">
+        <h3>${product.name}</h3>
+        <p>Supplier Price: GH₵ ${product.cost.toFixed(2)}</p>
+        <p>Selling Price: GH₵ ${product.sell.toFixed(2)}</p>
+        <p class="profit">
+          Profit: GH₵ ${product.profit.toFixed(2)}
+        </p>
+        <button onclick="deleteProduct(${index})">
+          Delete Product
+        </button>
+      </div>
+    `;
+  });
+
+  updateDashboard();
+}
+
+function deleteProduct(index) {
+
+  products.splice(index, 1);
+
+  saveProducts();
+
+  displayProducts();
+}
+
+function updateDashboard() {
+
+  document.getElementById("productCount").innerText = products.length;
+
+  let sales = 0;
+  let profit = 0;
+
+  products.forEach(product => {
+    sales += product.sell;
+    profit += product.profit;
+  });
+
+  document.getElementById("sales").innerText = sales.toFixed(2);
+  document.getElementById("profit").innerText = profit.toFixed(2);
+
+  document.getElementById("orders").innerText = products.length;
+}
+
+displayProducts();
+
+</script>
+
+</body>
+</html>
